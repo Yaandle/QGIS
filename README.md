@@ -1,6 +1,6 @@
 # QGIS Location Image Generator
 
-Stage 1 complete. Generates a PNG of a geographic location using QGIS headless mode.
+Generates a PNG of a geographic location using QGIS headless mode.
 
 ## Run
 
@@ -20,6 +20,12 @@ Edit the top of `generate_location_image.py`:
     IMAGE_HEIGHT_PX 1080
     OUTPUT_FILE     location_output.png
 
+## Sources
+
+    Stage 1 — OpenStreetMap XYZ tiles
+    Stage 2 — NSW Spatial Services WMS (LPIMap_PlacePoint)
+               https://maps.six.nsw.gov.au/arcgis/services/public/NSW_Base_Map/MapServer/WMSServer
+
 ## Output
 
 `location_output.png` in E:\QGIS\
@@ -27,5 +33,5 @@ Edit the top of `generate_location_image.py`:
 ## Stages
 
 - [x] Stage 1 — OSM tile layer to PNG
-- [ ] Stage 2 — NSW Spatial WMS layer
+- [x] Stage 2 — NSW Spatial WMS layer
 - [ ] Stage 3 — CLI arguments
