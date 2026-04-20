@@ -3,6 +3,7 @@
 Generates a PNG of a geographic location using QGIS headless mode and a
 NSW Spatial Services WMS basemap.
 
+
 ## Run
 
 Open **OSGeo4W Shell** and invoke `python-qgis-ltr.bat` with script path:
@@ -11,6 +12,7 @@ Open **OSGeo4W Shell** and invoke `python-qgis-ltr.bat` with script path:
     python-qgis-ltr.bat "E:\QGIS\generate_location_image.py" [OPTIONS]
 
 **All arguments are optional — omitting any falls back to the default.**
+
 
 ### Options
 
@@ -35,21 +37,24 @@ Edit the top of `generate_location_image.py`:
     IMAGE_HEIGHT_PX 1080
     OUTPUT_FILE     location_output.png
 
+
 ## Sources
 
-Stage 1 — OpenStreetMap XYZ tiles
-Stage 2 — NSW Spatial Services WMS (LPIMap_PlacePoint)
+- Stage 1 — OpenStreetMap XYZ tiles
+- Stage 2 — NSW Spatial Services WMS (LPIMap_PlacePoint)
   
 
 ## Output
 
 `location_output.png` in E:\QGIS\ (default), or the path specified by --output.
 
+
 ## Stages
 
 - [x] Stage 1 — OSM tile layer to PNG
 - [x] Stage 2 — NSW Spatial WMS layer
 - [x] Stage 3 — CLI arguments
+
 
 ### generate_location_image.py
 
