@@ -49,7 +49,8 @@ Stage 2 — NSW Spatial Services WMS (LPIMap_PlacePoint)
 
 - [x] Stage 1 — OSM tile layer to PNG
 - [x] Stage 2 — NSW Spatial WMS layer
-- [x] Stage 3 — CLI arguments
+- [x] Stage 3 — CLI arguments + config.yaml
+- [ ] Stage 5 — Speed + Experimentation
 
 ### generate_location_image.py
 
