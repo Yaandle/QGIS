@@ -1,10 +1,10 @@
 """
 generate_location_image.py
 --------------------------
-Stage 1 — Foundational Win
+Stage 2 — Repetition + Variation
 
 Generates a PNG image of a geographic location using QGIS headless mode.
-Uses an XYZ tile layer (OpenStreetMap) as the basemap.
+Uses an WMS URL (NSW Base Map) as the basemap.
 
 Usage (from OSGeo4W Shell):
     python-qgis generate_location_image.py
