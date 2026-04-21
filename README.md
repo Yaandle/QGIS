@@ -113,3 +113,34 @@ Requirements:
     QGIS 3.x installed (tested on 3.44.9)
     Run from OSGeo4W Shell, NOT a regular Python interpreter
 ```
+
+
+```
+generate_location_image.py
+--------------------------
+Stage 5 — Speed + Experimentation
+
+Generates a PNG image of a geographic location using QGIS headless mode.
+Uses a NSW Spatial Services WMS layer as the basemap.
+
+Defaults are loaded from config.yaml in the same directory as this script.
+CLI arguments override config values.
+
+Added (Stage 5):
+  - Render timing logged to results.csv
+  - --layers flag for multi-layer composition (comma-separated)
+  - --label flag to tag each run in the log
+
+Usage (from OSGeo4W Shell):
+    python-qgis generate_location_image.py [OPTIONS]
+
+Examples:
+    python-qgis-ltr generate_location_image.py
+    python-qgis-ltr generate_location_image.py --lat -33.8688 --lon 151.2093
+    python-qgis-ltr generate_location_image.py --label "exp2_scale_2000" --scale 2000
+    python-qgis-ltr generate_location_image.py --label "exp4_composite" --layers "LPIMap_PlacePoint,NSW_Cadastre"
+
+
+Output:
+    location_output.png (default) + results.csv log
+```
