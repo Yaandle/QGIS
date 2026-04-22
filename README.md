@@ -1,4 +1,114 @@
-"""
+# QGIS Location Image Generator
+
+Generates a PNG of a geographic location using QGIS headless mode and a
+NSW Spatial Services WMS basemap.
+
+## Run
+
+Open **OSGeo4W Shell** and invoke `python-qgis-ltr.bat` with script path:
+
+    cd "E:\Program Files\QGIS 3.44.9\bin"
+    python-qgis-ltr.bat "E:\QGIS\generate_location_image.py" [OPTIONS]
+
+**All arguments are optional — omitting any falls back to the default.**
+
+### Options
+
+| Flag | Alias | Default | Description |
+|---|---|---|---|
+| `--lat` | `--latitude` | `-33.8688` | Latitude of map centre (decimal degrees) |
+| `--lon` | `--longitude` | `151.2093` | Longitude of map centre (decimal degrees) |
+| `--scale` | | `50000` | Scale denominator (e.g. `50000` → 1:50,000) |
+| `--width` | | `1920` | Output image width in pixels |
+| `--height` | | `1080` | Output image height in pixels |
+| `--output` | `-o` | `location_output.png` | Output PNG path |
+
+
+### Config (Default Fallback)
+
+Edit `config.yaml` in the same directory as the script.
+
+## Sources
+
+- Base: NSW Spatial Services WMS (LPIMap_PlacePoint)
+- Overlay: NSW Spatial Services WMS (NSW_Cadastre)
+  
+
+## Output
+
+`location_output.png` in E:\QGIS\ (default), or the path specified by --output.
+
+## Stages
+
+- [x] Stage 1 — OSM tile layer to PNG
+- [x] Stage 2 — NSW Spatial WMS layer
+- [x] Stage 3 — CLI arguments + config.yaml
+- [x] Stage 5 — Speed + Experimentation
+
+### generate_location_image.py
+
+```
+Stage 1 — Foundational Win
+--------------------------
+Generates a PNG image of a geographic location using QGIS headless mode.
+Uses an XYZ tile layer (OpenStreetMap) as the basemap.
+
+Usage (from OSGeo4W Shell):
+    python-qgis generate_location_image.py
+
+Output:
+    location_output.png in the same directory as this script.
+
+Requirements:
+    QGIS 3.x installed (tested on 3.44.9)
+    Run from OSGeo4W Shell, NOT a regular Python interpreter
+```
+
+```
+Stage 2 — Repetition + Variation
+--------------------------
+
+Generates a PNG image of a geographic location using QGIS headless mode.
+Uses an WMS URL (NSW Base Map) as the basemap.
+
+Usage (from OSGeo4W Shell):
+    python-qgis generate_location_image.py
+
+Output:
+    location_output.png in the same directory as this script.
+
+Requirements:
+    QGIS 3.x installed (tested on 3.44.9)
+    Run from OSGeo4W Shell, NOT a regular Python interpreter
+```
+
+
+```
+Stage 3 — CLI Arguments/System Formation
+--------------------------
+Generates a PNG image of a geographic location using QGIS headless mode.
+Uses a NSW Spatial Services WMS layer as the basemap.
+
+Usage (from OSGeo4W Shell):
+    python-qgis-ltr generate_location_image.py [OPTIONS]
+
+Examples:
+    python-qgis-ltr generate_location_image.py
+    python-qgis-ltr generate_location_image.py --lat -33.8688 --lon 151.2093
+    python-qgis-ltr generate_location_image.py --lat -33.8688 --lon 151.2093 --scale 25000
+    python-qgis generate_location_image.py --lat -33.8688 --lon 151.2093 --scale 25000 --width 1920 --height 1080 --output sydney.png
+
+Output:
+    location_output.png in the same directory as this script (default),
+    or the path specified by --output.
+
+Requirements:
+    QGIS 3.x installed (tested on 3.44.9)
+    Run from OSGeo4W Shell, NOT a regular Python interpreter
+```
+
+
+```
 generate_location_image.py
 --------------------------
 Stage 5 — Speed + Experimentation
@@ -13,171 +123,111 @@ Added (Stage 5):
   - Render timing logged to results.csv
   - --layers flag for multi-layer composition (comma-separated)
   - --label flag to tag each run in the log
-"""
 
-import sys
-import os
-import argparse
-import yaml
-import time
-import csv
+Usage (from OSGeo4W Shell):
+    python-qgis generate_location_image.py [OPTIONS]
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(SCRIPT_DIR, "config.yaml")
+Examples:
+    python-qgis-ltr generate_location_image.py
+    python-qgis-ltr generate_location_image.py --lat -33.8688 --lon 151.2093
+    python-qgis-ltr generate_location_image.py --label "exp2_scale_2000" --scale 2000
+    python-qgis-ltr generate_location_image.py --label "exp4_composite" --layers "LPIMap_PlacePoint,NSW_Cadastre"
 
+Output:
+    location_output.png (default) + results.csv log
+---
+# The Five Experiments
 
-def load_config():
-    with open(CONFIG_PATH, "r") as f:
-        return yaml.safe_load(f)
+Experiment 1 — Source Type 
+Experiment 2 — Scale
+Experiment 3 — Location
+Experiment 4 — Layer Composition
+Experiment 5 — Render Performance
+---
 
+## Experiment 1 — Source Type
 
-def parse_args(cfg):
-    loc = cfg["location"]
-    mp  = cfg["map"]
-    out = cfg["output"]
+Tested base WMS vs overlay WMS in isolation at the same location and scale.
 
-    parser = argparse.ArgumentParser(
-        description="Generate a PNG map image for a geographic location using QGIS headless mode.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument("--lat", "--latitude",  type=float, default=loc["latitude"],  dest="latitude")
-    parser.add_argument("--lon", "--longitude", type=float, default=loc["longitude"], dest="longitude")
-    parser.add_argument("--scale",              type=int,   default=mp["scale"])
-    parser.add_argument("--width",              type=int,   default=mp["width"])
-    parser.add_argument("--height",             type=int,   default=mp["height"])
-    parser.add_argument("--output", "-o",       type=str,   default=out["file"])
+| Layer         | Time  |
+|--------------|------:|
+| Base only     | 2.89s |
+| Overlay only  | 3.82s |
 
-    parser.add_argument("--label", type=str, default="run")
-    parser.add_argument("--layers", type=str, default=None)
+Both sources are viable individually. The overlay at 3.82s was unexpectedly competitive — the 37s result from the first data set was server variance, not a real characteristic.
 
-    return parser.parse_args()
+The finding is that layer type alone does not determine performance. Server state does.
 
+---
 
-def main():
-    cfg  = load_config()
-    args = parse_args(cfg)
+## Experiment 2 — Scale
 
-    src  = cfg["source"]
-    src2 = cfg["source2"]
+Tested composite layers across four scale denominators at Sydney CBD.
 
-    WMS_URL    = src["wms_url"]
-    WMS_LAYER  = src["wms_layer"]
-    LAYER_NAME = src["layer_name"]
+| Scale       | Time   |
+|------------|-------:|
+| 1:200,000  | 14.64s |
+| 1:50,000   | 12.65s |
+| 1:10,000   | 4.99s  |
+| 1:2,000    | 2.25s  |
 
+Smaller extents are faster. The 10k and 2k scales align with efficient tile levels on the server.
 
-    if not os.path.isabs(args.output):
-        args.output = os.path.join(SCRIPT_DIR, args.output)
+The 200k result reflects the server assembling data across a large geographic extent.
 
-    if args.output == os.path.join(SCRIPT_DIR, cfg["output"]["file"]):
-        args.output = os.path.join(SCRIPT_DIR, f"outputs/{args.label}.png")
+Street-level requests are the fastest configuration.
 
-    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+---
 
-    from qgis.core import (
-        QgsApplication, QgsRasterLayer, QgsProject,
-        QgsPointXY, QgsCoordinateReferenceSystem,
-        QgsCoordinateTransform, QgsMapSettings,
-        QgsMapRendererParallelJob, QgsRectangle,
-    )
-    from qgis.PyQt.QtGui import QColor
-    from qgis.PyQt.QtCore import QSize
+## Experiment 3 — Location
 
-    QgsApplication.setPrefixPath(r"E:\Program Files\QGIS 3.44.9", True)
-    qgs = QgsApplication([], False)
-    qgs.initQgis()
+Tested composite layers across geographic locations at a consistent scale.
 
-    from qgis.core import QgsNetworkAccessManager
-    QgsNetworkAccessManager.instance().setTimeout(120 * 1000)
+| Location                 | Time  |
+|--------------------------|------:|
+| Sydney CBD               | 5.73s |
+| Bathurst                 | 2.39s |
+| Rural (-31.5, 146.0)     | 2.67s |
+| Dubbo                    | 3.00s |
 
-    # --- layer builder ---
-    def build_layer(url, wms_layer, layer_name):
-        params = (
-            f"url={url}&layers={wms_layer}"
-            f"&styles=default&format=image/png&crs=EPSG:4326&version=1.3.0"
-            f"&timeout=120"
-        )
-        lyr = QgsRasterLayer(params, layer_name, "wms")
-        if not lyr.isValid():
-            print(f"Layer error ({layer_name}): {lyr.error().message()}")
-            return None
-        QgsProject.instance().addMapLayer(lyr)
-        return lyr
+NSW Spatial WMS covers the state uniformly. There are no coverage gaps.
 
-    # --- registry-driven layer stack ---
-    LAYER_REGISTRY = {
-        "base":    lambda: build_layer(WMS_URL, WMS_LAYER, LAYER_NAME),
-        "overlay": lambda: build_layer(src2["wms_url"], src2["wms_layer"], src2["layer_name"]),
-    }
+Observed slowdowns are attributable to server load at the time of request.
 
-    requested = [l.strip() for l in (args.layers or "base,overlay").split(",")]
+Geographic location is not a performance variable for this source.
 
-    # top → bottom = last → first
-    layers = list(filter(None, [LAYER_REGISTRY[k]() for k in reversed(requested)]))
+---
 
-    layers_label = args.layers or "base,overlay"
+## Experiment 4 — Layer Composition
 
-    # --- transform ---
-    crs_4326 = QgsCoordinateReferenceSystem("EPSG:4326")
-    crs_3857 = QgsCoordinateReferenceSystem("EPSG:3857")
-    transform = QgsCoordinateTransform(crs_4326, crs_3857, QgsProject.instance())
+Composite render times show that QGIS handles parallel layer fetching efficiently.
 
-    centre_3857 = transform.transform(QgsPointXY(args.longitude, args.latitude))
+The primary finding is visual rather than performance-based:
 
-    metres_per_pixel = args.scale * 0.000264583
-    half_w = (args.width  / 2) * metres_per_pixel
-    half_h = (args.height / 2) * metres_per_pixel
+- The overlay introduces noise at most scales  
+- The base layer is cleaner and more legible on its own  
 
-    extent = QgsRectangle(
-        centre_3857.x() - half_w, centre_3857.y() - half_h,
-        centre_3857.x() + half_w, centre_3857.y() + half_h,
-    )
+This shifts the focus from performance to output quality, leading into Stage 6.
 
-    settings = QgsMapSettings()
-    settings.setLayers(layers)
-    settings.setOutputSize(QSize(args.width, args.height))
-    settings.setExtent(extent)
-    settings.setDestinationCrs(crs_3857)
-    settings.setBackgroundColor(QColor(255, 255, 255))
+---
 
-    # --- render timing ---
-    t0 = time.perf_counter()
-    job = QgsMapRendererParallelJob(settings)
-    job.start()
-    job.waitForFinished()
-    elapsed = time.perf_counter() - t0
+## Experiment 5 — Render Performance
 
-    image = job.renderedImage()
-    if image.isNull():
-        print("ERROR: Rendered image is null.")
-        qgs.exitQgis()
-        sys.exit(1)
+The primary bottleneck is server availability.
 
-    image.save(args.output, "PNG")
+It is not:
+- Geographic location  
+- Scale  
+- QGIS initialization  
+- Local hardware  
 
-    # --- logging ---
-    log_path = os.path.join(SCRIPT_DIR, "results.csv")
-    write_header = not os.path.exists(log_path)
+Evidence: identical requests returning between ~2 seconds and ~120 seconds across runs.
 
-    with open(log_path, "a", newline="") as f:
-        w = csv.writer(f)
-        if write_header:
-            w.writerow(["label", "lat", "lon", "scale", "width", "height", "layers", "render_s", "output"])
-        w.writerow([
-            args.label,
-            args.latitude,
-            args.longitude,
-            args.scale,
-            args.width,
-            args.height,
-            layers_label,
-            f"{elapsed:.2f}",
-            args.output
-        ])
+The pipeline itself is consistent and performant. Variability is external.
 
-    print(f"Render time: {elapsed:.2f}s")
+**Engineering implication:**
+- Implement retry logic  
+- Do not rely solely on timeout tuning  
 
-    qgs.exitQgis()
-
-
-if __name__ == "__main__":
-    main()
+---
+```
