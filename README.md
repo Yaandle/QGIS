@@ -24,21 +24,14 @@ Open **OSGeo4W Shell** and invoke `python-qgis-ltr.bat` with script path:
 | `--output` | `-o` | `location_output.png` | Output PNG path |
 
 
-### Config (**Default Fallback**)
+### Config (Default Fallback)
 
-Edit the top of `generate_location_image.py`:
-
-    LATITUDE        -33.8688
-    LONGITUDE       151.2093
-    SCALE           50000
-    IMAGE_WIDTH_PX  1920
-    IMAGE_HEIGHT_PX 1080
-    OUTPUT_FILE     location_output.png
+Edit `config.yaml` in the same directory as the script.
 
 ## Sources
 
-Stage 1 — OpenStreetMap XYZ tiles
-Stage 2 — NSW Spatial Services WMS (LPIMap_PlacePoint)
+- Base: NSW Spatial Services WMS (LPIMap_PlacePoint)
+- Overlay: NSW Spatial Services WMS (NSW_Cadastre)
   
 
 ## Output
@@ -50,7 +43,7 @@ Stage 2 — NSW Spatial Services WMS (LPIMap_PlacePoint)
 - [x] Stage 1 — OSM tile layer to PNG
 - [x] Stage 2 — NSW Spatial WMS layer
 - [x] Stage 3 — CLI arguments + config.yaml
-- [ ] Stage 5 — Speed + Experimentation
+- [x] Stage 5 — Speed + Experimentation
 
 ### generate_location_image.py
 
