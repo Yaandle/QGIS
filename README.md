@@ -142,11 +142,99 @@ Examples:
 
 Output:
     location_output.png (default) + results.csv log
+---
+# The Five Experiments
 
 Experiment 1 — Source Type 
 Experiment 2 — Scale
 Experiment 3 — Location
 Experiment 4 — Layer Composition
 Experiment 5 — Render Performance
+---
 
+## Experiment 1 — Source Type
+
+Tested base WMS vs overlay WMS in isolation at the same location and scale.
+
+| Layer         | Time  |
+|--------------|------:|
+| Base only     | 2.89s |
+| Overlay only  | 3.82s |
+
+Both sources are viable individually. The overlay at 3.82s was unexpectedly competitive — the 37s result from the first data set was server variance, not a real characteristic.
+
+The finding is that layer type alone does not determine performance. Server state does.
+
+---
+
+## Experiment 2 — Scale
+
+Tested composite layers across four scale denominators at Sydney CBD.
+
+| Scale       | Time   |
+|------------|-------:|
+| 1:200,000  | 14.64s |
+| 1:50,000   | 12.65s |
+| 1:10,000   | 4.99s  |
+| 1:2,000    | 2.25s  |
+
+Smaller extents are faster. The 10k and 2k scales align with efficient tile levels on the server.
+
+The 200k result reflects the server assembling data across a large geographic extent.
+
+Street-level requests are the fastest configuration.
+
+---
+
+## Experiment 3 — Location
+
+Tested composite layers across geographic locations at a consistent scale.
+
+| Location                 | Time  |
+|--------------------------|------:|
+| Sydney CBD               | 5.73s |
+| Bathurst                 | 2.39s |
+| Rural (-31.5, 146.0)     | 2.67s |
+| Dubbo                    | 3.00s |
+
+NSW Spatial WMS covers the state uniformly. There are no coverage gaps.
+
+Observed slowdowns are attributable to server load at the time of request.
+
+Geographic location is not a performance variable for this source.
+
+---
+
+## Experiment 4 — Layer Composition
+
+Composite render times show that QGIS handles parallel layer fetching efficiently.
+
+The primary finding is visual rather than performance-based:
+
+- The overlay introduces noise at most scales  
+- The base layer is cleaner and more legible on its own  
+
+This shifts the focus from performance to output quality, leading into Stage 6.
+
+---
+
+## Experiment 5 — Render Performance
+
+The primary bottleneck is server availability.
+
+It is not:
+- Geographic location  
+- Scale  
+- QGIS initialization  
+- Local hardware  
+
+Evidence: identical requests returning between ~2 seconds and ~120 seconds across runs.
+
+The pipeline itself is consistent and performant. Variability is external.
+
+**Engineering implication:**
+- Implement retry logic  
+- Do not rely solely on timeout tuning  
+
+---
 ```
