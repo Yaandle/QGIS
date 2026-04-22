@@ -262,10 +262,9 @@ Batch pipeline with retry logic, failure-aware logging, and a 33-job stress test
 | `renderer.py` | Extracted render function — called per job, never exits the process |
 | `jobs.csv` | Input job list |
 
-```bat
-cd "E:\Program Files\QGIS 3.44.9\bin"
-python-qgis-ltr.bat "E:\QGIS\batch_render.py" --jobs "E:\QGIS\jobs.csv" --retries 3 --backoff 5
-```
+    Usage (from OSGeo4W Shell):
+        cd "E:\Program Files\QGIS 3.44.9\bin"
+        python-qgis-ltr.bat "E:\QGIS\batch_render.py" --jobs "E:\QGIS\jobs.csv" --retries 3 --backoff 5
 
 | Flag | Default | Description |
 |---|---|---|
