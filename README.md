@@ -37,6 +37,7 @@ Edit `config.yaml` in the same directory as the script.
 ## Output
 
 `location_output.png` in E:\QGIS\ (default), or the path specified by --output.
+`results.csv` in E:\QGIS\ (default)
 
 ## Stages
 
