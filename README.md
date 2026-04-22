@@ -140,7 +140,13 @@ Examples:
     python-qgis-ltr generate_location_image.py --label "exp2_scale_2000" --scale 2000
     python-qgis-ltr generate_location_image.py --label "exp4_composite" --layers "LPIMap_PlacePoint,NSW_Cadastre"
 
-
 Output:
     location_output.png (default) + results.csv log
+
+Experiment 1 — Source Type 
+Experiment 2 — Scale
+Experiment 3 — Location
+Experiment 4 — Layer Composition
+Experiment 5 — Render Performance
+
 ```
