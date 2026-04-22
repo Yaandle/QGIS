@@ -3,6 +3,9 @@
 Generates a PNG of a geographic location using QGIS headless mode and a
 NSW Spatial Services WMS basemap.
 
+![QGISTask.gif]
+
+
 ## Run
 
 ### Single image
