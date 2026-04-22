@@ -62,7 +62,6 @@ Every attempt is logged — retries appear as separate rows with incrementing `a
 - [x] Stage 8 — Real World Iteration
 
 
-### generate_location_image.py
 
 ```
 Stage 1 — Foundational Win
