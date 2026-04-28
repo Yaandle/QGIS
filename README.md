@@ -3,16 +3,17 @@
 Generates a PNG of a geographic location using QGIS headless mode and a
 NSW Spatial Services WMS basemap.
 
+![Project Screenshot](QGISTask.gif)
+
 ## Run
 
+### Single image
 Open **OSGeo4W Shell** and invoke `python-qgis-ltr.bat` with script path:
 
     cd "E:\Program Files\QGIS 3.44.9\bin"
     python-qgis-ltr.bat "E:\QGIS\generate_location_image.py" [OPTIONS]
 
 **All arguments are optional — omitting any falls back to the default.**
-
-### Options
 
 | Flag | Alias | Default | Description |
 |---|---|---|---|
@@ -23,6 +24,18 @@ Open **OSGeo4W Shell** and invoke `python-qgis-ltr.bat` with script path:
 | `--height` | | `1080` | Output image height in pixels |
 | `--output` | `-o` | `location_output.png` | Output PNG path |
 
+### Batch render
+    python-qgis-ltr.bat "E:\QGIS\batch_render.py" [OPTIONS]
+
+| Flag | Default | Description |
+|---|---|---|
+| `--jobs` | `jobs.csv` | Path to input CSV |
+| `--retries` | `3` | Max retries per job on server failure |
+| `--backoff` | `5` | Base backoff in seconds (doubles each retry) |
+| `--layers` | `base,overlay` | Layer stack override for all jobs |
+
+Input CSV columns: `label, lat, lon, scale, width, height, layers`
+(`scale`, `width`, `height`, `layers` are optional per row — fall back to config defaults.)
 
 ### Config (Default Fallback)
 
@@ -32,11 +45,15 @@ Edit `config.yaml` in the same directory as the script.
 
 - Base: NSW Spatial Services WMS (LPIMap_PlacePoint)
 - Overlay: NSW Spatial Services WMS (NSW_Cadastre)
-  
 
 ## Output
 
-`location_output.png` in E:\QGIS\ (default), or the path specified by --output.
+- Single: `location_output.png` in `E:\QGIS\` (default), or path specified by `--output`
+- Batch: `outputs/<label>.png` per job + `results.csv` log
+
+`results.csv` columns: `label, lat, lon, scale, width, height, layers, attempt, status, render_s, output, error`
+
+Every attempt is logged — retries appear as separate rows with incrementing `attempt`.
 
 ## Stages
 
@@ -44,8 +61,9 @@ Edit `config.yaml` in the same directory as the script.
 - [x] Stage 2 — NSW Spatial WMS layer
 - [x] Stage 3 — CLI arguments + config.yaml
 - [x] Stage 5 — Speed + Experimentation
+- [x] Stage 8 — Real World Iteration
 
-### generate_location_image.py
+
 
 ```
 Stage 1 — Foundational Win
@@ -109,9 +127,8 @@ Requirements:
 
 
 ```
-generate_location_image.py
---------------------------
 Stage 5 — Speed + Experimentation
+--------------------------
 
 Generates a PNG image of a geographic location using QGIS headless mode.
 Uses a NSW Spatial Services WMS layer as the basemap.
@@ -230,4 +247,56 @@ The pipeline itself is consistent and performant. Variability is external.
 - Do not rely solely on timeout tuning  
 
 ---
+```
+```
+
+### Stage 8 — Real World Iteration
+--------------------------
+
+Batch pipeline with retry logic, failure-aware logging, and a 33-job stress test across scale, location, layer composition, output size, and server variance.
+
+#### New files
+
+| File | Purpose |
+|---|---|
+| `batch_render.py` | Batch entry point — reads jobs CSV, manages retries, writes log |
+| `renderer.py` | Extracted render function — called per job, never exits the process |
+| `jobs.csv` | Input job list |
+
+    Usage (from OSGeo4W Shell):
+        cd "E:\Program Files\QGIS 3.44.9\bin"
+        python-qgis-ltr.bat "E:\QGIS\batch_render.py" --jobs "E:\QGIS\jobs.csv" --retries 3 --backoff 5
+
+| Flag | Default | Description |
+|---|---|---|
+| `--jobs` | `jobs.csv` | Path to input CSV |
+| `--retries` | `3` | Max retries per job on server failure |
+| `--backoff` | `5` | Base backoff in seconds (doubles each retry) |
+| `--layers` | `base,overlay` | Layer stack override for all jobs |
+
+Input CSV columns: `label, lat, lon, scale, width, height, layers`
+(`scale`, `width`, `height`, `layers` are optional per row — fall back to config defaults.)
+
+#### Key findings
+
+**4K output is expensive.**
+3840×2160 averaged ~51s across two runs vs ~4s for 1920×1080 — roughly a 13× penalty for a 4× pixel increase. Not suitable for batch use without a tiled rendering strategy.
+
+**Aspect ratio affects render time independently of pixel count.**
+2048×2048 (4.2MP) took 17.21s while 2560×1440 (3.7MP) took 3.09s. A square canvas is disproportionately slow — server tile assembly is sensitive to canvas shape, not just total resolution.
+
+**Scale variance is noise above street level.**
+The scale ladder (1:2,000 → 1:1,000,000) ranged 1.51s–4.54s — all within the server noise floor. No meaningful trend. Scale is not a performance variable for this pipeline above street level.
+
+**Compositing adds negligible time.**
+Base: 1.68s. Overlay: 1.03s. Composite: 1.62s. QGIS fetches layers in parallel — a two-layer stack is effectively free. The overlay endpoint has intermittent severe latency (102.29s spike, one hard layer_error observed) that is a server-side condition, not a pipeline cost.
+
+**Geographic coverage is NSW only.**
+The NSW Spatial Services WMS has no coverage outside NSW. Non-NSW locations return blank tiles instantly via the QGIS tile cache — not real renders. All valid geographic data is NSW-only.
+
+**Noise floor is ~2 seconds.**
+Ten identical repeat runs ranged 1.88s–3.58s. True baseline is ~2s with occasional 3–4s spikes. Differences smaller than 2 seconds between runs should not be interpreted as signal.
+
+**The pipeline shows no degradation over long runs.**
+120 consecutive jobs with no retries, no null images, no timing drift across repeat and stamina blocks. The bottleneck remains the server.
 ```
